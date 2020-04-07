@@ -1,34 +1,27 @@
-%cNumber_full
+%tightCollimated
 
 %% PREPARATIONS
 
-%Define gc, gd, and g0
-gc = (rabi ^ 2 * kappa / 4)/(kappa ^ 2 /4 + detuning ^ 2);
-gd = (rabi ^ 2 * detuning / 2)/(kappa ^ 2 /4 + detuning ^ 2);
-g0 = rabi ^ 2 / kappa;
-
 %time in units as in tmax=tStep*nStore
+transitTime = 1;
 tStep = tmax/nStore;
-tList = linspace(tStep,tmax,nStore);
-%time in units as in tmax=dt*nTimeStep
-nTimeStep = tmax/dt;
-tScatterList = linspace(tStep,tmax,nTimeStep);
+tList = linspace(tStep, tmax, nStore);
 
 %Take steadyMultiplier*transitTime as the steady state time. 
 %This is empirical for now. 
 steadyMultiplier = 5;
 
-t0 = steadyMultiplier*transitTime;
-n0 = ceil(t0/tmax*nStore);
+t0 = steadyMultiplier * transitTime;
+n0 = ceil(t0 / tmax * nStore);
 
 m = nStore - n0 + 1;
 %Solve the analytical solution. aValue -> IValue, 
 %  where aValue*rabi = sqrt(IValue*gc).
-IValue = getIValue(transitTime,gc,density*mAtom);
+IValue = getIValue(transitTime, gc, density);
 %% Plot nAtom.
 figure(1);
 hold on;
-scatter(tList/transitTime, nAtom);
+scatter(tList / transitTime, nAtom);
 % plot(tList/transitTime, density*mAtom*transitTime*ones(1,nStore));
 hold off;
 xlabel('t/\tau','FontSize', 20);
@@ -45,10 +38,8 @@ pause;
 figure(2);
 subplot(2,1,1);
 hold on;
-plot(tList/transitTime, intensity/density/mAtom);
-% w1_intensity = load('w=1_intensity.dat');
-% plot(tList/transitTime, w1_intensity/100);
-plot(tList/transitTime, IValue*ones(1,nStore)/density/mAtom);
+plot(tList / transitTime, intensity / density);
+plot(tList/transitTime, IValue * ones(1, nStore) / density);
 hold off;
 xlabel('t/\tau','FontSize', 20);
 ylabel('I/\Phi');
@@ -56,12 +47,11 @@ set(gca,'FontSize',20);
 
 subplot(2,1,2);
 hold on;
-% if sFinalMatrix_true == 1
-%     szFinalList = mean(szFinalMatrix, 1);
-%     scatter(tList/transitTime, szFinalList, 5, 'filled');
-% end
-plot(tList/transitTime, 1-2*intensity/density/mAtom);
-plot(tList/transitTime, 1-2*IValue*ones(1,nStore)/density/mAtom);
+plot(tList / transitTime, 1 - 2 * intensity / density);
+plot(tList / transitTime, 1 - 2 * IValue * ones(1, nStore) / density);
+if fast == 0
+    plot(tList /transitTime, mean(szMatrix(end, :), 2) * ones(1, nStore));
+end
 hold off;
 xlabel('t/\tau','FontSize', 20);
 ylabel('\langle s^z(\tau) \rangle');
@@ -70,21 +60,15 @@ intensityPrint = mean(intensity(n0:end));
 formatSpec = ...
     'The steady-state intensity is %4.2f.\n';
 fprintf(formatSpec, intensityPrint);
-% if sFinalMatrix_true == 1
-%     szFinalPrint = mean(szFinalList(n0:end), 'omitnan');
-%     formatSpec = 'The steady-state szFinal is %4.2f.\n';
-%     fprintf(formatSpec, szFinalPrint);
-% end
 fprintf('Program paused. Press enter to continue.\n');
 pause;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% //batch variables
-
 q = -JyMatrix(:,n0:nStore);
 p = JxMatrix(:,n0:nStore);
 
 %Define batch parameters
-batchTime = min(10*transitTime, tmax-t0);%approximate coherence time
+batchTime = min(1000*transitTime, tmax-t0);%approximate coherence time
 batchSize = floor(batchTime/tStep);%want at lest 20
 tBatch = linspace(0,batchTime,batchSize);
 nBatch = floor(m/batchSize);%want at least 20
@@ -156,70 +140,6 @@ fprintf('Program paused. Press enter to continue.\n');
 pause;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Check the 3 terms
-% term1 = Re[<J^+(t) J^-(0) Jz(t)>]
-% term2 = Re[<J^+(t) J^-(0)> <Jz(t)>]
-% term3 = Re[boundary term] = Re[-2*density/gc*<\sigma^+(t,tau) J^-(0)>]
-% down = Re[<J^+(t) J^-(0)]
-
-% if jzMatrix_true == 1 && sFinalMatrix_true == 1
-%     Jz = JzMatrix(:, n0:nStore);
-%     sxFinal = sxFinalMatrix(:, n0:nStore);
-%     syFinal = sxFinalMatrix(:, n0:nStore);
-% 
-%     %define the 3 terms
-%     term1Matrix = zeros(nBatch, batchSize);
-%     term2Matrix = zeros(nBatch, batchSize);
-%     term3Matrix = zeros(nBatch, batchSize);
-%     downMatrix = zeros(nBatch, batchSize);%denominator defined by <aDag(t) a(0)>
-%     
-%     for i=1:nBatch
-%         jz_i = Jz(:,(1+batchSize*(i-1)):(i*batchSize));
-%         q_i = q(:,(1+batchSize*(i-1)):(i*batchSize));
-%         p_i = p(:,(1+batchSize*(i-1)):(i*batchSize));
-%         sx_i = sxFinal(:,(1+batchSize*(i-1)):(i*batchSize));
-%         sy_i = syFinal(:,(1+batchSize*(i-1)):(i*batchSize));
-%         
-%         term1Matrix(i,:) = 0.25*mean((q_i.*q_i(:,1)+p_i.*p_i(:,1)).*jz_i,1);
-%         term2Matrix(i,:) = 0.25*mean(q_i.*q_i(:,1)+p_i.*p_i(:,1),1).*mean(jz_i,1);
-%         term3Matrix(i,:) = ...
-%             -0.5*density/gc*mean(sx_i.*p_i(:,1)-sy_i.*q_i(:,1),1,'omitnan');
-%         downMatrix(i,:) = 0.25*mean(q_i.*q_i(:,1)+p_i.*p_i(:,1),1);
-%     end
-%     %get terms
-%     term1 = mean(term1Matrix, 1);
-%     term2 = mean(term2Matrix, 1);
-%     term3 = -mean(term3Matrix, 1, 'omitnan');
-%     down = mean(downMatrix, 1);
-%     %get the ratio
-%     ratio1 = (term1-term2)./down;
-%     ratio2 = (term3-term2)./down;
-%     %plot ratio
-%     figure(81);
-%     
-%     subplot(1,2,1);
-%     hold on;
-%     plot(tBatch/transitTime,term1);
-%     plot(tBatch/transitTime,term2);
-%     scatter(tBatch/transitTime,term3);
-%     hold off;
-%     xlabel('t/T','FontSize', 20);
-%     
-%     subplot(1,2,2);
-%     hold on;
-%     plot(tBatch/transitTime,ratio1/gc);
-%     scatter(tBatch/transitTime,ratio2/gc);
-%     hold off;
-%     xlabel('t/T','FontSize', 20);
-%     ylabel('ratio/\Gamma_c','FontSize', 20);
-%     
-%     formatSpec ='Ratio1 is %.2f gammac. \nRatio2 is %.2f gammac.\n';
-%     ratio1Print = mean(ratio1/gc,2);
-%     ratio2Print = mean(ratio2/gc,2,'omitnan');
-%     fprintf(formatSpec, ratio1Print, ratio2Print);
-%     fprintf('Program paused. Press enter to continue.\n');
-%     pause;
-% end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %spectrum
 
@@ -319,23 +239,22 @@ fprintf(formatSpec, size(pks,1), loc);
 fprintf('Program paused. Press enter to continue.\n');
 pause;
 %% g(2)(0) 
-% not good with cNumber?
 %g(2) at 0 (take the last data point as our sample data)
-g2 = 0;
-for i=n0:nStore
-    q4 = mean(-JyMatrix(:,i).^4);
-    p4 = mean(JxMatrix(:,i).^4);
-    q2p2 = mean(-JyMatrix(:,i).^2.*JxMatrix(:,i).^2);
-    q2 = mean(-JyMatrix(:,i).^2);
-    p2 = mean(JxMatrix(:,i).^2);
-    g2 = g2 + (q4+p4+2*q2p2-8*(q2+p2)+8)/(q2+p2-2)^2;
-end
-g2 = g2/m;
-formatSpec = 'The g2(0) value is %.2f \n';
-fprintf(formatSpec, g2);
-fprintf('Program paused. Press enter to continue.\n');
-
-%g(2)(t)???
+% g2 = 0;
+% for i=n0:nStore
+%     q4 = mean(-JyMatrix(:,i).^4);
+%     p4 = mean(JxMatrix(:,i).^4);
+%     q2p2 = mean(-JyMatrix(:,i).^2.*JxMatrix(:,i).^2);
+%     q2 = mean(-JyMatrix(:,i).^2);
+%     p2 = mean(JxMatrix(:,i).^2);
+%     g2 = g2 + (q4+p4+2*q2p2-8*(q2+p2)+8)/(q2+p2-2)^2;
+% end
+% g2 = g2/m;
+% formatSpec = 'The g2(0) value is %.2f \n';
+% fprintf(formatSpec, g2);
+% fprintf('Program paused. Press enter to continue.\n');
+% 
+% %g(2)(t)???
 %% Plot szAve and szMatrix.
 % figure(4);
 % 
@@ -366,28 +285,28 @@ fprintf('Program paused. Press enter to continue.\n');
 % fprintf('Program paused. Press enter to continue.\n');
 % pause;
 %% Plot sxMatrix and syMatrix.
-if fast == 0
-    figure(5);
-
-    subplot(2,1,1);
-    hold on;
-    plot(1:nBin, mean(sxMatrix(:,n0:end),2, 'omitnan'));%, 20, 'filled');
-    % plot(1:nBin, sin(sqrt(IValue*gc)*transitTime*(1:nBin)/nBin)/sqrt(2));
-    hold off;
-    xlabel('nBin','FontSize', 20);
-    ylabel('\langle s^x(t'') \rangle');
-
-    subplot(2,1,2);
-    hold on;
-    plot(1:nBin, mean(syMatrix(:,n0:end),2, 'omitnan'));%, 20, 'filled');
-    % plot(1:nBin, sin(sqrt(IValue*gc)*transitTime*(1:nBin)/nBin)/sqrt(2));
-    hold off;
-    xlabel('nBin','FontSize', 20);
-    ylabel('\langle s^y(t'') \rangle');
-
-    fprintf('Program paused. Press enter to continue.\n');
-    pause;
-end
+% if fast == 0
+%     figure(5);
+% 
+%     subplot(2,1,1);
+%     hold on;
+%     plot(1:nBin, mean(sxMatrix(:,n0:end),2, 'omitnan'));%, 20, 'filled');
+%     % plot(1:nBin, sin(sqrt(IValue*gc)*transitTime*(1:nBin)/nBin)/sqrt(2));
+%     hold off;
+%     xlabel('nBin','FontSize', 20);
+%     ylabel('\langle s^x(t'') \rangle');
+% 
+%     subplot(2,1,2);
+%     hold on;
+%     plot(1:nBin, mean(syMatrix(:,n0:end),2, 'omitnan'));%, 20, 'filled');
+%     % plot(1:nBin, sin(sqrt(IValue*gc)*transitTime*(1:nBin)/nBin)/sqrt(2));
+%     hold off;
+%     xlabel('nBin','FontSize', 20);
+%     ylabel('\langle s^y(t'') \rangle');
+% 
+%     fprintf('Program paused. Press enter to continue.\n');
+%     pause;
+% end
 %% Plot spinSpinCorAve.
 % if fast == 0
 %     figure(6);

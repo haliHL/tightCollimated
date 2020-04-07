@@ -1,11 +1,11 @@
-%cNumber_old
+%tightCollimated
 
 %Initialization
 clear; close all; 
 %clc;
 
 %Get parameters
-getParam_beamLaser;
+getParam_tightCollimated;
 projectdir1 = controlType;
 cd(projectdir1);
 projectdir2 = name;
@@ -44,5 +44,5 @@ if fast == 0
 end
 
 %Add the previous directory into path
-addpath ~/Desktop/codes/beamLaser_Proj/cNumber_old/;
-addpath ~/Desktop/codes/beamLaser_Proj/common/;
+addpath ~/Desktop/codes/beamLaser_Proj/tightCollimated/;
+% addpath ~/Desktop/codes/beamLaser_Proj/common/;

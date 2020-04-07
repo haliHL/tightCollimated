@@ -1,16 +1,17 @@
-%cNumber_old
+%tightCollimated
 
 %This code needs to be run after running "loadData_multiRun_dens_gc.m".
 %This code treats data with a 2D UNIVERSAL parameter manner.
 %% PREPARATIONS
 
-tStep = tmax/nStore;
+transitTime = 1;
+tStep = tmax / nStore;
 
 %set the steadyMultiplier
 steadyMultiplier = 5;%This value can be varied if needed. 5 is empirical.
-t0 = steadyMultiplier*transitTime;
-n0_nStore = ceil(t0/tmax*nStore);
-n0_nTimeStep = ceil(t0/tmax*nTimeStep);
+t0 = steadyMultiplier * transitTime;
+n0_nStore = ceil(t0 / tmax * nStore);
+n0_nTimeStep = ceil(t0 / tmax * nTimeStep);
 m = nStore - n0_nStore + 1;
 
 %get ntgcMatrix

@@ -1,0 +1,368 @@
+%tightCollimated
+
+%% PREPARATIONS
+
+%time in units as in tmax=tStep*nStore
+transitTime = 1;
+tStep = tmax/nStore;
+tList = linspace(tStep, tmax, nStore);
+
+%Take steadyMultiplier*transitTime as the steady state time. 
+%This is empirical for now. 
+steadyMultiplier = 5;
+
+t0 = steadyMultiplier * transitTime;
+n0 = ceil(t0 / tmax * nStore);
+
+m = nStore - n0 + 1;
+%Solve the analytical solution. aValue -> IValue, 
+%  where aValue*rabi = sqrt(IValue*gc).
+IValue = getIValue(transitTime, gc, density);
+%% Plot nAtom.
+figure(1);
+hold on;
+scatter(tList / transitTime, nAtom);
+% plot(tList/transitTime, density*mAtom*transitTime*ones(1,nStore));
+hold off;
+xlabel('t/\tau','FontSize', 20);
+ylabel('N(t)');
+set(gca,'FontSize',20);
+
+nAtomPrint = mean(nAtom(n0:end));
+% sdv_nAtomPrint = var(nAtom(n0:end));
+formatSpec = 'The steady-state nAtom is %d. \n';
+fprintf(formatSpec, nAtomPrint);
+fprintf('Program paused. Press enter to continue.\n');
+pause;
+%% Plot I and szFinal. 
+figure(2);
+subplot(2,1,1);
+hold on;
+plot(tList / transitTime, intensity / density);
+plot(tList/transitTime, IValue * ones(1, nStore) / density);
+hold off;
+xlabel('t/\tau','FontSize', 20);
+ylabel('I/\Phi');
+set(gca,'FontSize',20);
+
+subplot(2,1,2);
+hold on;
+plot(tList / transitTime, 1 - 2 * intensity / density);
+plot(tList / transitTime, 1 - 2 * IValue * ones(1, nStore) / density);
+if fast == 0
+    plot(tList /transitTime, mean(szMatrix(end, :), 2) * ones(1, nStore));
+end
+hold off;
+xlabel('t/\tau','FontSize', 20);
+ylabel('\langle s^z(\tau) \rangle');
+
+intensityPrint = mean(intensity(n0:end));
+formatSpec = ...
+    'The steady-state intensity is %4.2f.\n';
+fprintf(formatSpec, intensityPrint);
+fprintf('Program paused. Press enter to continue.\n');
+pause;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% //batch variables
+q = -JyMatrix(:,n0:nStore);
+p = JxMatrix(:,n0:nStore);
+
+%Define batch parameters
+batchTime = min(10*transitTime, tmax-t0);%approximate coherence time
+batchSize = floor(batchTime/tStep);%want at lest 20
+tBatch = linspace(0,batchTime,batchSize);
+nBatch = floor(m/batchSize);%want at least 20
+
+%The fields q and p
+figure(3);
+set(gca,'FontSize',20);
+subplot(2,1,1);
+hold on;
+plot(tList, mean(-JyMatrix,1));
+plot(tList, mean(JxMatrix,1));
+hold off;
+xlabel('t/T','FontSize', 20);
+ylabel('-Jy/Jx');
+subplot(2,1,2);
+JySq = mean(JyMatrix.^2,1);
+JxSq = mean(JxMatrix.^2,1);
+hold on;
+plot(tList, JySq);
+plot(tList, JxSq);
+plot(tList, JxSq + JySq);
+hold off;
+xlabel('t/T','FontSize', 20);
+ylabel('J^{y^2}/J^{x^2}');
+% plot(tList, mean(JxMatrix,1));
+% xlabel('t/T','FontSize', 20);
+% ylabel('Jx');
+% JySqPrint = mean(JySq(n0:end));
+% formatSpec = 'The steady-state JySq is %4.4f. \n';
+% fprintf(formatSpec, JySqPrint);
+fprintf('Program paused. Press enter to continue.\n');
+pause;
+
+%% g(1)(t), decorrelation, and spectrum
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%g(1)
+
+%get non-negative part of g(1) function
+realG1Pos = zeros(1,batchSize);
+imagG1Pos = zeros(1,batchSize);
+for i=1:nBatch
+    q_i = q(:,(1+batchSize*(i-1)):(i*batchSize));
+    p_i = p(:,(1+batchSize*(i-1)):(i*batchSize));
+    realG1Pos = realG1Pos + (q_i(:,1)'*q_i+p_i(:,1)'*p_i);
+    imagG1Pos = imagG1Pos + (p_i(:,1)'*q_i-q_i(:,1)'*p_i);
+end
+%normalize g(1) with realG1Pos. Notice that the relative value matters.
+maxRealG1Pos = max(realG1Pos);
+realG1Pos = realG1Pos/maxRealG1Pos;
+imagG1Pos = imagG1Pos/maxRealG1Pos;
+%plot g(1)
+figure(8);
+% subplot(2,1,1);
+hold on;
+plot(tBatch/transitTime,realG1Pos)
+%debug
+% w1_g1 = load('w=1_g1.dat');
+% plot(tBatch(1:1000)/transitTime,w1_g1)
+%debug
+hold off;
+xlabel('t/\tau','FontSize', 20);
+ylabel('Re[g^{(1)}(t)]');
+% subplot(2,1,2);
+% plot(tBatch/transitTime,imagG1Pos)
+% xlabel('t/\tau','FontSize', 20);
+% ylabel('Im[g^{(1)}(t)]');
+
+fprintf('Program paused. Press enter to continue.\n');
+pause;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%spectrum
+
+%Method 1: fit the normalized realG1Pos to exponential decay
+l1 = coeffvalues(fit(tBatch',realG1Pos','exp1','startpoint',[1,-1])); 
+linewidth1 = -l1(2)/pi;
+ratio_tau1 = linewidth1*transitTime;
+ratio_gc1 = linewidth1/gc;
+
+figure(9);
+hold on;
+yCalc1 = l1(1)*exp(l1(2).*tBatch);
+plot(tBatch,realG1Pos);
+plot(tBatch,yCalc1,'--')
+hold off;
+set(gca,'FontSize',20);
+
+printWords1 = ['The linewidth is ', num2str(ratio_tau1,'%.4f'),...
+    ' transitTime inverse or ', num2str(ratio_gc1,'%.4f'),' gammac.'];
+disp(printWords1);
+fprintf('Program paused. Press enter to continue.\n');
+pause;
+
+%Method 2: fit the log realG1Pos to linear
+x1= [ones(batchSize,1) tBatch'];%also defined in phase diffusion part
+y2 = real(log(realG1Pos'));
+l2 = x1\y2;
+
+figure(91);
+hold on;
+yCalc2 = x1*l2;
+plot(tBatch, real(log(realG1Pos)));
+plot(tBatch, yCalc2)
+% legend('Data','Slope','Slope & Intercept','Location','best');
+hold off;
+
+linewidth2 = -l2(2)/pi;
+ratio_tau2 = linewidth2*transitTime;
+ratio_gc2 = linewidth2/gc;
+printWords = ['The linewidth is ', num2str(ratio_tau2,'%.4f'),...
+    ' transitTime inverse or ', num2str(ratio_gc2,'%.4f'),' gammac.'];
+disp(printWords);
+fprintf('Program paused. Press enter to continue.\n');
+pause;
+
+%Method 3: plot the spectra and find FWHM
+%time reversal and complex
+realG1Plot = [fliplr(realG1Pos),realG1Pos(2:end)];
+imagG1Plot = [-fliplr(imagG1Pos),imagG1Pos(2:end)];
+G1Plot = realG1Plot+1i*imagG1Plot;
+S = fft(ifftshift(G1Plot));
+timeInterval = tStep;
+df = 1/timeInterval;
+%smoothdata() equivalent to decreasing total time
+s = real(S);
+%normalize s such that the peak is at 1;
+s = fftshift(s)/max(s);
+L = size(s,2);
+f = df*(-L/2+1:L/2)/L;
+spectra = [f; s]';
+
+%plot the spectrum
+figure(92);
+hold on;
+plot(spectra(:,1)*transitTime, spectra(:,2));
+%debug
+% w1_spectra = load('w=1_spectra.dat');
+% plot(w1_spectra(:,1)*transitTime, w1_spectra(:,2));
+%debug
+hold off;
+xlim([-5 5]);
+set(gca,'FontSize',20);
+title('Spectrum of the Beam Laser','FontSize',20);
+xlabel('Frequency/\tau^{-1}','FontSize', 16);
+
+l3 = fwhm(spectra(:,1),spectra(:,2));
+linewidth3 = l3;
+ratio_tau3 = linewidth3*transitTime;
+ratio_gc3 = linewidth3/gc;
+printWords = ['The linewidth is ', num2str(ratio_tau3,'%.4f'),...
+    ' transitTime inverse or ', num2str(ratio_gc3,'%.4f'),' gammac.'];
+disp(printWords);
+fprintf('Program paused. Press enter to continue.\n');
+pause;
+
+%get the spacing between peaks
+[pks,locs] = findpeaks(spectra(:,2), spectra(:,1),'MinPeakHeight',0.999);
+if size(pks,1) == 1
+    loc = locs;
+elseif size(pks,1) == 2
+    loc = (abs(locs(1)) + abs(locs(2)))/2;
+else
+    fprintf('More than 2 peaks are found. Bad MinPeakHeight value used.\n');
+end
+formatSpec = 'The number of peaks is %d. The spacing is %4.2f transitTime inverse.\n';
+fprintf(formatSpec, size(pks,1), loc);
+fprintf('Program paused. Press enter to continue.\n');
+pause;
+%% g(2)(0) 
+%g(2) at 0 (take the last data point as our sample data)
+g2 = 0;
+for i=n0:nStore
+    q4 = mean(-JyMatrix(:,i).^4);
+    p4 = mean(JxMatrix(:,i).^4);
+    q2p2 = mean(-JyMatrix(:,i).^2.*JxMatrix(:,i).^2);
+    q2 = mean(-JyMatrix(:,i).^2);
+    p2 = mean(JxMatrix(:,i).^2);
+    g2 = g2 + (q4+p4+2*q2p2-8*(q2+p2)+8)/(q2+p2-2)^2;
+end
+g2 = g2/m;
+formatSpec = 'The g2(0) value is %.2f \n';
+fprintf(formatSpec, g2);
+fprintf('Program paused. Press enter to continue.\n');
+
+%g(2)(t)???
+%% Plot szAve and szMatrix.
+% figure(4);
+% 
+% subplot(2,1,1);
+% hold on;
+% plot(tList/transitTime, inversionAve);%, 5, 'filled');
+% plot(tList/transitTime, sinc(sqrt(IValue*gc)*transitTime/pi)*ones(1,nStore));%sinc has pi
+% hold off;
+% xlabel('t/\tau','FontSize', 20);
+% ylabel('\langle s^z(t)\rangle');
+% 
+% subplot(2,1,2);
+% if fast == 0
+%     hold on;
+%     plot(1:nBin, mean(szMatrix(:,n0:end),2,'omitnan'));%, 5, 'filled');
+% %     plot(1:nBin, exp(-0.00001*transitTime*(1:nBin)/nBin)...
+% %         .*cos((sqrt(IValue*gc)-0.15)*transitTime*(1:nBin)/nBin));
+%     plot(16:nBin-15, cos((sqrt(density*gc))*0.27*transitTime*(1:nBin-30)/(nBin-30)));
+%     
+%     hold off;
+%     xlabel('nBin','FontSize', 20);
+%     ylabel('\langle s^z(t'') \rangle');
+% end
+% 
+% inversionAvePrint = mean(inversionAve(n0:end));
+% formatSpec = 'The steady-state szAve is %4.4f.\n';
+% fprintf(formatSpec, inversionAvePrint);
+% fprintf('Program paused. Press enter to continue.\n');
+% pause;
+%% Plot sxMatrix and syMatrix.
+if fast == 0
+    figure(5);
+
+    subplot(2,1,1);
+    hold on;
+    plot(1:nBin, mean(sxMatrix(:,n0:end),2, 'omitnan'));%, 20, 'filled');
+    % plot(1:nBin, sin(sqrt(IValue*gc)*transitTime*(1:nBin)/nBin)/sqrt(2));
+    hold off;
+    xlabel('nBin','FontSize', 20);
+    ylabel('\langle s^x(t'') \rangle');
+
+    subplot(2,1,2);
+    hold on;
+    plot(1:nBin, mean(syMatrix(:,n0:end),2, 'omitnan'));%, 20, 'filled');
+    % plot(1:nBin, sin(sqrt(IValue*gc)*transitTime*(1:nBin)/nBin)/sqrt(2));
+    hold off;
+    xlabel('nBin','FontSize', 20);
+    ylabel('\langle s^y(t'') \rangle');
+
+    fprintf('Program paused. Press enter to continue.\n');
+    pause;
+end
+%% Plot spinSpinCorAve.
+% if fast == 0
+%     figure(6);
+%     set(gca,'FontSize',20);
+%     % subplot(2,1,1);
+%     hold on;
+%     plot(tList/transitTime,spinSpinCorAve_re);
+%     plot(tList/transitTime,1/4*sinc(sqrt(IValue*gc)*transitTime/pi/2)^2*ones(1,nStore));
+%     hold off;
+%     % axis([0 inf 0 0.15]);
+%     xlabel('t/\tau','FontSize', 20);
+%     ylabel('Re[\langle \sigma^+_i(t) \sigma^-_j(t) \rangle]');
+%     
+%     % subplot(2,1,2);
+%     % plot(tList, spinSpinCorAve_im);
+%     % xlabel('t/T','FontSize', 20);
+%     % ylabel('Im[\langle \sigma^+_i(t) \sigma^-_j(t) \rangle]');
+% 
+%     ssCorRePrint = mean(spinSpinCorAve_re(n0:end));
+%     formatSpec = 'The steady-state ssCorRe is %4.4f.\n';
+%     fprintf(formatSpec, ssCorRePrint);
+%     fprintf('Program paused. Press enter to continue.\n');
+%     pause;
+% end
+%% Plot spinSpinCor.
+% if fast==0 
+%     figure(7);
+%     set(gca,'FontSize',20);
+%     subplot(1,2,1);
+%     s_re = reshape(spinSpinCor_re,nBin,nBin,[]);
+%     [X, Y] = meshgrid(1:nBin, 1:nBin);
+%     surf(X, Y, s_re(:,:,end),s_re(:,:,end));
+%     axis([0 inf 0 inf -0.25 0.3]);
+%     colorbar;
+%     set(gca,'FontSize',20);
+%     rotate3d on;
+% 
+%     subplot(1,2,2);
+%     [X, Y] = meshgrid(1:nBin, 1:nBin);
+%     s_re_model = 1/4*sin(sqrt(IValue*gc)*transitTime*X/nBin)...
+%         .*sin(sqrt(IValue*gc)*transitTime*Y/nBin);
+%     surf(X, Y, s_re_model, s_re_model);
+%     axis([0 inf 0 inf -0.25 0.3]);
+%     colorbar;
+%     set(gca,'FontSize',20);
+%     rotate3d on;
+% 
+%     % subplot(2,1,2);
+%     % s_im = reshape(spinSpinCor_im,nBin,nBin,[]);
+%     % surf(X, Y, s_im(:,:,end),s_im(:,:,end));
+%     % colorbar;
+%     % rotate3d on;
+% 
+%     fprintf('Program paused. Press enter to continue.\n');
+%     pause;
+% end
+%% //Movie of space-space correlation over time
+%This program uses the definition of s_re and X, Y, Z.
+% movie_ssCor;
