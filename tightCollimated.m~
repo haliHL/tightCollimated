@@ -68,7 +68,7 @@ q = -JyMatrix(:,n0:nStore);
 p = JxMatrix(:,n0:nStore);
 
 %Define batch parameters
-batchTime = min(10*transitTime, tmax-t0);%approximate coherence time
+batchTime = min(50*transitTime, tmax-t0);%approximate coherence time
 batchSize = floor(batchTime/tStep);%want at lest 20
 tBatch = linspace(0,batchTime,batchSize);
 nBatch = floor(m/batchSize);%want at least 20
@@ -240,21 +240,21 @@ fprintf('Program paused. Press enter to continue.\n');
 pause;
 %% g(2)(0) 
 %g(2) at 0 (take the last data point as our sample data)
-g2 = 0;
-for i=n0:nStore
-    q4 = mean(-JyMatrix(:,i).^4);
-    p4 = mean(JxMatrix(:,i).^4);
-    q2p2 = mean(-JyMatrix(:,i).^2.*JxMatrix(:,i).^2);
-    q2 = mean(-JyMatrix(:,i).^2);
-    p2 = mean(JxMatrix(:,i).^2);
-    g2 = g2 + (q4+p4+2*q2p2-8*(q2+p2)+8)/(q2+p2-2)^2;
-end
-g2 = g2/m;
-formatSpec = 'The g2(0) value is %.2f \n';
-fprintf(formatSpec, g2);
-fprintf('Program paused. Press enter to continue.\n');
-
-%g(2)(t)???
+% g2 = 0;
+% for i=n0:nStore
+%     q4 = mean(-JyMatrix(:,i).^4);
+%     p4 = mean(JxMatrix(:,i).^4);
+%     q2p2 = mean(-JyMatrix(:,i).^2.*JxMatrix(:,i).^2);
+%     q2 = mean(-JyMatrix(:,i).^2);
+%     p2 = mean(JxMatrix(:,i).^2);
+%     g2 = g2 + (q4+p4+2*q2p2-8*(q2+p2)+8)/(q2+p2-2)^2;
+% end
+% g2 = g2/m;
+% formatSpec = 'The g2(0) value is %.2f \n';
+% fprintf(formatSpec, g2);
+% fprintf('Program paused. Press enter to continue.\n');
+% 
+% %g(2)(t)???
 %% Plot szAve and szMatrix.
 % figure(4);
 % 
@@ -285,9 +285,9 @@ fprintf('Program paused. Press enter to continue.\n');
 % fprintf('Program paused. Press enter to continue.\n');
 % pause;
 %% Plot sxMatrix and syMatrix.
-if fast == 0
+% if fast == 0
     figure(5);
-
+% 
     subplot(2,1,1);
     hold on;
     plot(1:nBin, mean(sxMatrix(:,n0:end),2, 'omitnan'));%, 20, 'filled');
@@ -295,18 +295,18 @@ if fast == 0
     hold off;
     xlabel('nBin','FontSize', 20);
     ylabel('\langle s^x(t'') \rangle');
-
-    subplot(2,1,2);
-    hold on;
-    plot(1:nBin, mean(syMatrix(:,n0:end),2, 'omitnan'));%, 20, 'filled');
-    % plot(1:nBin, sin(sqrt(IValue*gc)*transitTime*(1:nBin)/nBin)/sqrt(2));
-    hold off;
-    xlabel('nBin','FontSize', 20);
-    ylabel('\langle s^y(t'') \rangle');
-
-    fprintf('Program paused. Press enter to continue.\n');
-    pause;
-end
+% 
+%     subplot(2,1,2);
+%     hold on;
+%     plot(1:nBin, mean(syMatrix(:,n0:end),2, 'omitnan'));%, 20, 'filled');
+%     % plot(1:nBin, sin(sqrt(IValue*gc)*transitTime*(1:nBin)/nBin)/sqrt(2));
+%     hold off;
+%     xlabel('nBin','FontSize', 20);
+%     ylabel('\langle s^y(t'') \rangle');
+% 
+%     fprintf('Program paused. Press enter to continue.\n');
+%     pause;
+% end
 %% Plot spinSpinCorAve.
 % if fast == 0
 %     figure(6);

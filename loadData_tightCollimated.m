@@ -41,8 +41,9 @@ if fast == 0
     sxMatrix = load('sxMatrix.dat');
     syMatrix = load('syMatrix.dat');
     szMatrix = load('szMatrix.dat');
+    szSqMatrix = load('szSqMatrix.dat');
 end
 
 %Add the previous directory into path
 addpath ~/Desktop/codes/beamLaser_Proj/tightCollimated/;
-% addpath ~/Desktop/codes/beamLaser_Proj/common/;
+addpath ~/Desktop/codes/beamLaser_Proj/common/;

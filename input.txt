@@ -1,9 +1,9 @@
 tMax 100
 nStore 1000
-nTrajectory 100
-nBin 50
-density 100
-gc 0.1
-controlType test
-name test
-fast 0
+nTrajectory 200
+nBin 20
+density 1000
+gc 0.040
+controlType dens_1000_gc_0.002_0.002_20_randomPhase
+name dens1000_gc0.040
+fast 1

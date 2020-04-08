@@ -1,25 +1,24 @@
-%cNumber_old
+%tightCollimated
 %This file is used to load the data from running "multirun_dens_gc.sh"
 
 %Initialization
 clear; close all; clc;
-addpath ~/Desktop/codes/beamLaser_Proj/cNumber_old/;
+addpath ~/Desktop/codes/beamLaser_Proj/tightCollimated/;
 addpath ~/Desktop/codes/beamLaser_Proj/common/;
 
 %get parameters from the input.txt in the controlType directory
 prompt = "What is the controlType?\n"; 
 controlType = input(prompt,'s');
 cd(controlType);
-getParam_multiRun_beamLaser;%This will give us the fast value
-nTimeStep = tmax/dt;
+getParam_multiRun_tightCollimated;%This will give us the fast value
 
 %bash variables; 
 
 %gc
 %If only one gcList%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 nMaxGc = 20;%
-initGc = 0.005;%
-intervalGc = 0.005;
+initGc = 0.001;%
+intervalGc = 0.002;
 gcList = initGc+(0:nMaxGc-1)*intervalGc;%dim = 1*nMaxGc
 
 % %If more than one gcList%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -41,7 +40,7 @@ gcList = initGc+(0:nMaxGc-1)*intervalGc;%dim = 1*nMaxGc
 %dens
 %If only one densList%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 nMaxDens = 1;%
-initDens = 200;
+initDens = 1000;
 intervalDens = 100;
 densList =initDens+(0:nMaxDens-1)*intervalDens;%dim = 1*nMaxDens
 
@@ -78,7 +77,7 @@ for j = 1:nMaxDens
     dens = densList(j);
     for i = 1:nMaxGc
         gc = gcList(i);
-        filenameList(i,j) = ['tau1.0_dens', num2str(dens),'_gc',num2str(gc,'%.4f')];
+        filenameList(i,j) = ['dens', num2str(dens),'_gc',num2str(gc,'%.3f')];
     end
 end
 

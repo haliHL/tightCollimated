@@ -66,12 +66,21 @@ void generateInternalState(Atom& newAtom, const Param& param)
   newSz.setOnes(nTrajectory);
   
   //Random initialization for sx and sy.
-  //+1, -1 approach
+  //+1, -1 approach//////////////////////////////////////////////////
+  // for (int j = 0; j < nTrajectory; j++)
+  // {
+  //   newSx(j) += double(rng.get_binomial_int(0.5, 1)) * 2 - 1;//50percent giving 1 or -1
+  //   newSy(j) += double(rng.get_binomial_int(0.5, 1)) * 2 - 1;//50percent giving 1 or -1
+  // } 
+  //random phase approach//////////////////////////////////////////////////
   for (int j = 0; j < nTrajectory; j++)
   {
-    newSx(j) += double(rng.get_binomial_int(0.5, 1)) * 2 - 1;//50percent giving 1 or -1
-    newSy(j) += double(rng.get_binomial_int(0.5, 1)) * 2 - 1;//50percent giving 1 or -1
-  } 
+    double phi = rng.get_uniform_rn(0, 2 * M_PI);
+    newSx(j) = sqrt(2) * cos(phi); 
+    newSy(j) = sqrt(2) * sin(phi); 
+  }
+  // std::cout << "Using random phase initialization." << std::endl;
+
 
   //Complete initiation
   Internal newInternal = {newSx, newSy, newSz};
@@ -293,6 +302,7 @@ void storeObservables(Observables& observables, const Ensemble& ensemble, const 
       observables.sxMatrix(i, nstore) = SX.middleRows(binSum(i), binIndex(i)).sum() / binIndex(i) / nTrajectory;
       observables.syMatrix(i, nstore) = SY.middleRows(binSum(i), binIndex(i)).sum() / binIndex(i) / nTrajectory;
       observables.szMatrix(i, nstore) = SZ.middleRows(binSum(i), binIndex(i)).sum() / binIndex(i) / nTrajectory;
+      observables.szSqMatrix(i, nstore) = SZ.middleRows(binSum(i), binIndex(i)).squaredNorm() / binIndex(i) / nTrajectory;
     }
 
     // //spinSpinCorAve
@@ -377,7 +387,8 @@ void writeObservables(ObservableFiles& observableFiles, Observables& observables
     // observableFiles.spinSpinCor_im << observables.spinSpinCor_im << std::endl;
     observableFiles.sxMatrix << observables.sxMatrix << std::endl;
     observableFiles.syMatrix << observables.syMatrix << std::endl;
-    observableFiles.szMatrix << observables.szMatrix << std::endl;   
+    observableFiles.szMatrix << observables.szMatrix << std::endl;
+    observableFiles.szSqMatrix << observables.szSqMatrix << std::endl;      
   } 
 }
 

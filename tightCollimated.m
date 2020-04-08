@@ -68,7 +68,7 @@ q = -JyMatrix(:,n0:nStore);
 p = JxMatrix(:,n0:nStore);
 
 %Define batch parameters
-batchTime = min(1000*transitTime, tmax-t0);%approximate coherence time
+batchTime = min(50*transitTime, tmax-t0);%approximate coherence time
 batchSize = floor(batchTime/tStep);%want at lest 20
 tBatch = linspace(0,batchTime,batchSize);
 nBatch = floor(m/batchSize);%want at least 20
@@ -290,7 +290,7 @@ pause;
 % 
 %     subplot(2,1,1);
 %     hold on;
-%     plot(1:nBin, mean(sxMatrix(:,n0:end),2, 'omitnan'));%, 20, 'filled');
+%     plot(1:nBin, mean(sxMatrix(:, n0:end),2, 'omitnan'));%, 20, 'filled');
 %     % plot(1:nBin, sin(sqrt(IValue*gc)*transitTime*(1:nBin)/nBin)/sqrt(2));
 %     hold off;
 %     xlabel('nBin','FontSize', 20);
@@ -307,9 +307,31 @@ pause;
 %     fprintf('Program paused. Press enter to continue.\n');
 %     pause;
 % end
+%% Plot szMatrix and szSqMatrix.
+if fast == 0
+    figure(6);
+   
+    subplot(2, 1, 1);
+    hold on;
+    plot(1:nBin, mean(szMatrix(:, end),2, 'omitnan'));%, 20, 'filled');
+    hold off;
+    xlabel('nBin','FontSize', 20);
+    ylabel('\langle s^z(t'') \rangle');
+    
+    subplot(2,1,2);
+    hold on;
+    plot(1:nBin, mean(szSqMatrix(:, end),2, 'omitnan'));%, 20, 'filled');
+    hold off;
+    xlabel('nBin','FontSize', 20);
+    ylabel('\langle {s^z}^2(t'') \rangle');
+    
+    fprintf('Program paused. Press enter to continue.\n');
+    pause;
+end
+
 %% Plot spinSpinCorAve.
 % if fast == 0
-%     figure(6);
+%     figure(7);
 %     set(gca,'FontSize',20);
 %     % subplot(2,1,1);
 %     hold on;
@@ -331,9 +353,10 @@ pause;
 %     fprintf('Program paused. Press enter to continue.\n');
 %     pause;
 % end
+
 %% Plot spinSpinCor.
 % if fast==0 
-%     figure(7);
+%     figure(8);
 %     set(gca,'FontSize',20);
 %     subplot(1,2,1);
 %     s_re = reshape(spinSpinCor_re,nBin,nBin,[]);
