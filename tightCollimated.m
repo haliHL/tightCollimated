@@ -9,7 +9,7 @@ tList = linspace(tStep, tmax, nStore);
 
 %Take steadyMultiplier*transitTime as the steady state time. 
 %This is empirical for now. 
-steadyMultiplier = 5;
+steadyMultiplier = 10;
 
 t0 = steadyMultiplier * transitTime;
 n0 = ceil(t0 / tmax * nStore);
@@ -68,10 +68,10 @@ q = -JyMatrix(:, n0:nStore);
 p = JxMatrix(:, n0:nStore);
 
 %Define batch parameters
-batchTime = min(1000 * transitTime, tmax - t0);%approximate coherence time
+batchTime = min(150 * transitTime, tmax - t0);%approximate coherence time
 batchSize = floor(batchTime / tStep);%want at lest 20
 tBatch = linspace(0, batchTime, batchSize);
-nBatch = floor(m / batchSize);%want at least 20
+nBatch = (nStore - n0) - batchSize + 1;
 
 %The fields q and p
 figure(3);
@@ -110,8 +110,8 @@ pause;
 realG1Pos = zeros(1, batchSize);
 imagG1Pos = zeros(1, batchSize);
 for i=1:nBatch
-    q_i = q(:, (1 + batchSize * (i - 1)):(i * batchSize));
-    p_i = p(:, (1 + batchSize * (i - 1)):(i * batchSize));
+    q_i = q(:, i:(i + batchSize - 1));
+    p_i = p(:, i:(i + batchSize - 1));
     realG1Pos = realG1Pos + (q_i(:,1)' * q_i + p_i(:,1)' * p_i);
     imagG1Pos = imagG1Pos + (p_i(:,1)' * q_i - q_i(:,1)' * p_i);
 end
@@ -124,6 +124,10 @@ figure(8);
 % subplot(2,1,1);
 hold on;
 plot(tBatch / transitTime, realG1Pos)
+%%simon's
+% load("linewidth_Simon.mat");
+% plot(x, y/max(y));
+%%simon's
 %debug
 % w1_g1 = load('w=1_g1.dat');
 % plot(tBatch(1:1000)/transitTime,w1_g1)
@@ -210,7 +214,7 @@ scatter(spectra(:,1) * transitTime, spectra(:, 2), 'linewidth', 2.0);
 % plot(w1_spectra(:,1)*transitTime, w1_spectra(:,2));
 %debug
 hold off;
-xlim([- tStep / 2,  tStep / 2]);
+% xlim([- L / 2,  L / 2]);
 set(gca,'FontSize',20);
 title('Spectrum of the Beam Laser','FontSize',20);
 xlabel('2\pi/\tau^{-1}','FontSize', 16);

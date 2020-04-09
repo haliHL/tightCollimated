@@ -249,7 +249,7 @@ void storeObservables(Observables& observables, const Ensemble& ensemble, const 
   {
     Jx += ensemble.atoms[i].internal.sx;
     Jy += ensemble.atoms[i].internal.sy;
-    observables.szSqMatrix(i, nstore) = ensemble.atoms[i].internal.sz.squaredNorm() / nTrajectory;
+    // observables.szSqMatrix(i, nstore) = ensemble.atoms[i].internal.sz.squaredNorm() / nTrajectory;
   }
   //field observables//////////////////////////////////////////////////////////////////////////////////
   
@@ -389,7 +389,7 @@ void writeObservables(ObservableFiles& observableFiles, Observables& observables
     observableFiles.sxMatrix << observables.sxMatrix << std::endl;
     observableFiles.syMatrix << observables.syMatrix << std::endl;
     observableFiles.szMatrix << observables.szMatrix << std::endl;
-    observableFiles.szSqMatrix << observables.szSqMatrix << std::endl;      
+    // observableFiles.szSqMatrix << observables.szSqMatrix << std::endl;      
   } 
 }
 
@@ -424,7 +424,7 @@ int main(int argc, char *argv[])
   //Set up initial conditions
   Ensemble ensemble;
   // generateInitialField(ensemble, param);
-  Observables observables(param.nStore, param.nTrajectory, param.nBin, param.density);
+  Observables observables(param.nStore, param.nTrajectory, param.nBin);//, param.density);
 
   //Start simulation
   evolve(ensemble, param, observables);

@@ -97,7 +97,7 @@ typedef struct Observables
   // MatrixXd spinSpinCor_re;
   // MatrixXd spinSpinCor_im;
 
-  Observables(const int nStore, const int nTrajectory, const int nBin, int density)
+  Observables(const int nStore, const int nTrajectory, const int nBin)//, int density)
   {
     nAtom = VectorXi(nStore); 
     intensity = VectorXd(nStore);
@@ -106,7 +106,7 @@ typedef struct Observables
     sxMatrix = MatrixXd(nBin, nStore);
     syMatrix = MatrixXd(nBin, nStore);
     szMatrix = MatrixXd(nBin, nStore);
-    szSqMatrix = MatrixXd(density, nStore);
+    // szSqMatrix = MatrixXd(density, nStore);
     // spinSpinCorAve_re = VectorXd(nStore);
     // spinSpinCorAve_im = VectorXd(nStore);
     // int nBinSquare = nBin * nBin;
@@ -129,8 +129,8 @@ typedef struct ObservableFiles
                 // spinSpinCor_im,
                 sxMatrix,
                 syMatrix,
-                szMatrix,
-                szSqMatrix;
+                szMatrix;
+                // szSqMatrix;
 
   //Constructor              
   ObservableFiles() : nAtom("nAtom.dat"), 
@@ -143,8 +143,8 @@ typedef struct ObservableFiles
                       // spinSpinCor_im("spinSpinCor_im.dat"),
                       sxMatrix("sxMatrix.dat"),
                       syMatrix("syMatrix.dat"),
-                      szMatrix("szMatrix.dat"),
-                      szSqMatrix("szSqMatrix.dat")
+                      szMatrix("szMatrix.dat")
+                      // szSqMatrix("szSqMatrix.dat")
   {}
   
   //Deconstructor
@@ -161,7 +161,7 @@ typedef struct ObservableFiles
     sxMatrix.close();
     syMatrix.close();
     szMatrix.close();
-    szSqMatrix.close();
+    // szSqMatrix.close();
   }
   
 } ObservableFiles;
