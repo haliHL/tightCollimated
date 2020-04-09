@@ -249,6 +249,7 @@ void storeObservables(Observables& observables, const Ensemble& ensemble, const 
   {
     Jx += ensemble.atoms[i].internal.sx;
     Jy += ensemble.atoms[i].internal.sy;
+    observables.szSqMatrix(i, nstore) = ensemble.atoms[i].internal.sz.squaredNorm() / nTrajectory;
   }
   //field observables//////////////////////////////////////////////////////////////////////////////////
   
@@ -302,7 +303,7 @@ void storeObservables(Observables& observables, const Ensemble& ensemble, const 
       observables.sxMatrix(i, nstore) = SX.middleRows(binSum(i), binIndex(i)).sum() / binIndex(i) / nTrajectory;
       observables.syMatrix(i, nstore) = SY.middleRows(binSum(i), binIndex(i)).sum() / binIndex(i) / nTrajectory;
       observables.szMatrix(i, nstore) = SZ.middleRows(binSum(i), binIndex(i)).sum() / binIndex(i) / nTrajectory;
-      observables.szSqMatrix(i, nstore) = SZ.middleRows(binSum(i), binIndex(i)).squaredNorm() / binIndex(i) / nTrajectory;
+      // observables.szSqMatrix(i, nstore) = SZ.middleRows(binSum(i), binIndex(i)).squaredNorm() / binIndex(i) / nTrajectory;
     }
 
     // //spinSpinCorAve
@@ -423,7 +424,7 @@ int main(int argc, char *argv[])
   //Set up initial conditions
   Ensemble ensemble;
   // generateInitialField(ensemble, param);
-  Observables observables(param.nStore, param.nTrajectory, param.nBin);
+  Observables observables(param.nStore, param.nTrajectory, param.nBin, param.density);
 
   //Start simulation
   evolve(ensemble, param, observables);

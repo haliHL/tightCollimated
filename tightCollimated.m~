@@ -4,7 +4,7 @@
 
 %time in units as in tmax=tStep*nStore
 transitTime = 1;
-tStep = tmax/nStore;
+tStep = tmax / nStore;
 tList = linspace(tStep, tmax, nStore);
 
 %Take steadyMultiplier*transitTime as the steady state time. 
@@ -64,28 +64,28 @@ fprintf('Program paused. Press enter to continue.\n');
 pause;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% //batch variables
-q = -JyMatrix(:,n0:nStore);
-p = JxMatrix(:,n0:nStore);
+q = -JyMatrix(:, n0:nStore);
+p = JxMatrix(:, n0:nStore);
 
 %Define batch parameters
-batchTime = min(50*transitTime, tmax-t0);%approximate coherence time
-batchSize = floor(batchTime/tStep);%want at lest 20
-tBatch = linspace(0,batchTime,batchSize);
-nBatch = floor(m/batchSize);%want at least 20
+batchTime = min(50 * transitTime, tmax - t0);%approximate coherence time
+batchSize = floor(batchTime / tStep);%want at lest 20
+tBatch = linspace(0, batchTime, batchSize);
+nBatch = floor(m / batchSize);%want at least 20
 
 %The fields q and p
 figure(3);
-set(gca,'FontSize',20);
-subplot(2,1,1);
+set(gca,'FontSize', 20);
+subplot(2, 1, 1);
 hold on;
-plot(tList, mean(-JyMatrix,1));
-plot(tList, mean(JxMatrix,1));
+plot(tList, mean(-JyMatrix, 1));
+plot(tList, mean(JxMatrix, 1));
 hold off;
-xlabel('t/T','FontSize', 20);
+xlabel('t/T', 'FontSize', 20);
 ylabel('-Jy/Jx');
-subplot(2,1,2);
-JySq = mean(JyMatrix.^2,1);
-JxSq = mean(JxMatrix.^2,1);
+subplot(2, 1, 2);
+JySq = mean(JyMatrix .^ 2, 1);
+JxSq = mean(JxMatrix .^ 2, 1);
 hold on;
 plot(tList, JySq);
 plot(tList, JxSq);
@@ -107,29 +107,29 @@ pause;
 %g(1)
 
 %get non-negative part of g(1) function
-realG1Pos = zeros(1,batchSize);
-imagG1Pos = zeros(1,batchSize);
+realG1Pos = zeros(1, batchSize);
+imagG1Pos = zeros(1, batchSize);
 for i=1:nBatch
-    q_i = q(:,(1+batchSize*(i-1)):(i*batchSize));
-    p_i = p(:,(1+batchSize*(i-1)):(i*batchSize));
-    realG1Pos = realG1Pos + (q_i(:,1)'*q_i+p_i(:,1)'*p_i);
-    imagG1Pos = imagG1Pos + (p_i(:,1)'*q_i-q_i(:,1)'*p_i);
+    q_i = q(:, (1 + batchSize * (i - 1)):(i * batchSize));
+    p_i = p(:, (1 + batchSize * (i - 1)):(i * batchSize));
+    realG1Pos = realG1Pos + (q_i(:,1)' * q_i + p_i(:,1)' * p_i);
+    imagG1Pos = imagG1Pos + (p_i(:,1)' * q_i - q_i(:,1)' * p_i);
 end
 %normalize g(1) with realG1Pos. Notice that the relative value matters.
 maxRealG1Pos = max(realG1Pos);
-realG1Pos = realG1Pos/maxRealG1Pos;
-imagG1Pos = imagG1Pos/maxRealG1Pos;
+realG1Pos = realG1Pos / maxRealG1Pos;
+imagG1Pos = imagG1Pos / maxRealG1Pos;
 %plot g(1)
 figure(8);
 % subplot(2,1,1);
 hold on;
-plot(tBatch/transitTime,realG1Pos)
+plot(tBatch / transitTime, realG1Pos)
 %debug
 % w1_g1 = load('w=1_g1.dat');
 % plot(tBatch(1:1000)/transitTime,w1_g1)
 %debug
 hold off;
-xlabel('t/\tau','FontSize', 20);
+xlabel('t/\tau', 'FontSize', 20);
 ylabel('Re[g^{(1)}(t)]');
 % subplot(2,1,2);
 % plot(tBatch/transitTime,imagG1Pos)
@@ -144,41 +144,41 @@ pause;
 %spectrum
 
 %Method 1: fit the normalized realG1Pos to exponential decay
-l1 = coeffvalues(fit(tBatch',realG1Pos','exp1','startpoint',[1,-1])); 
-linewidth1 = -l1(2)/pi;
-ratio_tau1 = linewidth1*transitTime;
-ratio_gc1 = linewidth1/gc;
+l1 = coeffvalues(fit(tBatch', realG1Pos', 'exp1', 'startpoint', [1, - 1])); 
+linewidth1 = -l1(2) * 2;
+ratio_tau1 = linewidth1 * transitTime;
+ratio_gc1 = linewidth1 / gc;
 
 figure(9);
 hold on;
-yCalc1 = l1(1)*exp(l1(2).*tBatch);
-plot(tBatch,realG1Pos);
-plot(tBatch,yCalc1,'--')
+yCalc1 = l1(1) * exp(l1(2) .* tBatch);
+plot(tBatch, realG1Pos);
+plot(tBatch, yCalc1, '--')
 hold off;
-set(gca,'FontSize',20);
+set(gca,'FontSize', 20);
 
-printWords1 = ['The linewidth is ', num2str(ratio_tau1,'%.4f'),...
-    ' transitTime inverse or ', num2str(ratio_gc1,'%.4f'),' gammac.'];
+printWords1 = ['The linewidth is ', num2str(ratio_tau1, '%.4f'),...
+    ' transitTime inverse or ', num2str(ratio_gc1, '%.4f'),' gammac.'];
 disp(printWords1);
 fprintf('Program paused. Press enter to continue.\n');
 pause;
 
 %Method 2: fit the log realG1Pos to linear
-x1= [ones(batchSize,1) tBatch'];%also defined in phase diffusion part
+x1= [ones(batchSize, 1) tBatch'];%also defined in phase diffusion part
 y2 = real(log(realG1Pos'));
-l2 = x1\y2;
+l2 = x1 \ y2;
 
 figure(91);
 hold on;
-yCalc2 = x1*l2;
+yCalc2 = x1 * l2;
 plot(tBatch, real(log(realG1Pos)));
 plot(tBatch, yCalc2)
 % legend('Data','Slope','Slope & Intercept','Location','best');
 hold off;
 
-linewidth2 = -l2(2)/pi;
-ratio_tau2 = linewidth2*transitTime;
-ratio_gc2 = linewidth2/gc;
+linewidth2 = -l2(2) * 2;
+ratio_tau2 = linewidth2 * transitTime;
+ratio_gc2 = linewidth2 / gc;
 printWords = ['The linewidth is ', num2str(ratio_tau2,'%.4f'),...
     ' transitTime inverse or ', num2str(ratio_gc2,'%.4f'),' gammac.'];
 disp(printWords);
@@ -187,24 +187,24 @@ pause;
 
 %Method 3: plot the spectra and find FWHM
 %time reversal and complex
-realG1Plot = [fliplr(realG1Pos),realG1Pos(2:end)];
-imagG1Plot = [-fliplr(imagG1Pos),imagG1Pos(2:end)];
-G1Plot = realG1Plot+1i*imagG1Plot;
+realG1Plot = [fliplr(realG1Pos), realG1Pos(2:end)];
+imagG1Plot = [-fliplr(imagG1Pos), imagG1Pos(2:end)];
+G1Plot = realG1Plot + 1i * imagG1Plot;
 S = fft(ifftshift(G1Plot));
 timeInterval = tStep;
-df = 1/timeInterval;
+dw = 1 / timeInterval;
 %smoothdata() equivalent to decreasing total time
 s = real(S);
 %normalize s such that the peak is at 1;
-s = fftshift(s)/max(s);
-L = size(s,2);
-f = df*(-L/2+1:L/2)/L;
+s = fftshift(s) / max(s);
+L = size(s, 2);
+f = dw *((- L / 2 + 1):(L / 2)/L;
 spectra = [f; s]';
 
 %plot the spectrum
 figure(92);
 hold on;
-plot(spectra(:,1)*transitTime, spectra(:,2));
+plot(spectra(:,1) * transitTime, spectra(:, 2));
 %debug
 % w1_spectra = load('w=1_spectra.dat');
 % plot(w1_spectra(:,1)*transitTime, w1_spectra(:,2));
@@ -217,10 +217,10 @@ xlabel('Frequency/\tau^{-1}','FontSize', 16);
 
 l3 = fwhm(spectra(:,1),spectra(:,2));
 linewidth3 = l3;
-ratio_tau3 = linewidth3*transitTime;
-ratio_gc3 = linewidth3/gc;
-printWords = ['The linewidth is ', num2str(ratio_tau3,'%.4f'),...
-    ' transitTime inverse or ', num2str(ratio_gc3,'%.4f'),' gammac.'];
+ratio_tau3 = linewidth3 * transitTime;
+ratio_gc3 = linewidth3 / gc;
+printWords = ['The linewidth is ', num2str(ratio_tau3, '%.4f'),...
+    ' transitTime inverse or ', num2str(ratio_gc3, '%.4f'),' gammac.'];
 disp(printWords);
 fprintf('Program paused. Press enter to continue.\n');
 pause;
@@ -286,15 +286,15 @@ pause;
 % pause;
 %% Plot sxMatrix and syMatrix.
 % if fast == 0
-    figure(5);
+%     figure(5);
 % 
-    subplot(2,1,1);
-    hold on;
-    plot(1:nBin, mean(sxMatrix(:,n0:end),2, 'omitnan'));%, 20, 'filled');
-    % plot(1:nBin, sin(sqrt(IValue*gc)*transitTime*(1:nBin)/nBin)/sqrt(2));
-    hold off;
-    xlabel('nBin','FontSize', 20);
-    ylabel('\langle s^x(t'') \rangle');
+%     subplot(2,1,1);
+%     hold on;
+%     plot(1:nBin, mean(sxMatrix(:, n0:end),2, 'omitnan'));%, 20, 'filled');
+%     % plot(1:nBin, sin(sqrt(IValue*gc)*transitTime*(1:nBin)/nBin)/sqrt(2));
+%     hold off;
+%     xlabel('nBin','FontSize', 20);
+%     ylabel('\langle s^x(t'') \rangle');
 % 
 %     subplot(2,1,2);
 %     hold on;
@@ -307,9 +307,31 @@ pause;
 %     fprintf('Program paused. Press enter to continue.\n');
 %     pause;
 % end
+%% Plot szMatrix and szSqMatrix.
+if fast == 0
+    figure(6);
+   
+    subplot(2, 1, 1);
+    hold on;
+    plot(1:nBin, mean(szMatrix(:, end),2, 'omitnan'));%, 20, 'filled');
+    hold off;
+    xlabel('nBin','FontSize', 20);
+    ylabel('\langle s^z(t'') \rangle');
+    
+    subplot(2,1,2);
+    hold on;
+    plot(1:density, mean(szSqMatrix(:, end),2, 'omitnan'));%, 20, 'filled');
+    hold off;
+    xlabel('nBin','FontSize', 20);
+    ylabel('\langle {s^z}^2(t'') \rangle');
+    
+    fprintf('Program paused. Press enter to continue.\n');
+    pause;
+end
+
 %% Plot spinSpinCorAve.
 % if fast == 0
-%     figure(6);
+%     figure(7);
 %     set(gca,'FontSize',20);
 %     % subplot(2,1,1);
 %     hold on;
@@ -331,9 +353,10 @@ pause;
 %     fprintf('Program paused. Press enter to continue.\n');
 %     pause;
 % end
+
 %% Plot spinSpinCor.
 % if fast==0 
-%     figure(7);
+%     figure(8);
 %     set(gca,'FontSize',20);
 %     subplot(1,2,1);
 %     s_re = reshape(spinSpinCor_re,nBin,nBin,[]);

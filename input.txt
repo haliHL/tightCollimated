@@ -1,9 +1,9 @@
-tMax 100
+tMax 1000
 nStore 1000
-nTrajectory 200
+nTrajectory 1000
 nBin 20
-density 1000
-gc 0.040
-controlType dens_1000_gc_0.002_0.002_20_randomPhase
-name dens1000_gc0.040
+density 100
+gc 0.06
+controlType benchmark
+name dens100_gc0.06
 fast 1
