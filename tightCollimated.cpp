@@ -67,18 +67,18 @@ void generateInternalState(Atom& newAtom, const Param& param)
   
   //Random initialization for sx and sy.
   //+1, -1 approach//////////////////////////////////////////////////
-  // for (int j = 0; j < nTrajectory; j++)
-  // {
-  //   newSx(j) += double(rng.get_binomial_int(0.5, 1)) * 2 - 1;//50percent giving 1 or -1
-  //   newSy(j) += double(rng.get_binomial_int(0.5, 1)) * 2 - 1;//50percent giving 1 or -1
-  // } 
-  //random phase approach//////////////////////////////////////////////////
   for (int j = 0; j < nTrajectory; j++)
   {
-    double phi = rng.get_uniform_rn(0, 2 * M_PI);
-    newSx(j) = sqrt(2) * cos(phi); 
-    newSy(j) = sqrt(2) * sin(phi); 
-  }
+    newSx(j) += double(rng.get_binomial_int(0.5, 1)) * 2 - 1;//50percent giving 1 or -1
+    newSy(j) += double(rng.get_binomial_int(0.5, 1)) * 2 - 1;//50percent giving 1 or -1
+  } 
+  //random phase approach//////////////////////////////////////////////////
+  // for (int j = 0; j < nTrajectory; j++)
+  // {
+  //   double phi = rng.get_uniform_rn(0, 2 * M_PI);
+  //   newSx(j) = sqrt(2) * cos(phi); 
+  //   newSy(j) = sqrt(2) * sin(phi); 
+  // }
   // std::cout << "Using random phase initialization." << std::endl;
 
 

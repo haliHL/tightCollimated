@@ -91,7 +91,7 @@ typedef struct Observables
   MatrixXd sxMatrix;
   MatrixXd syMatrix;
   MatrixXd szMatrix;
-  MatrixXd szSqMatrix;
+  // MatrixXd szSqMatrix;
   // VectorXd spinSpinCorAve_re;
   // VectorXd spinSpinCorAve_im;
   // MatrixXd spinSpinCor_re;

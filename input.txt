@@ -1,9 +1,9 @@
-tMax 100
+tMax 1000
 nStore 1000
 nTrajectory 1000
 nBin 20
 density 100
 gc 0.06
-controlType test
+controlType benchmark
 name dens100_gc0.06
 fast 1
