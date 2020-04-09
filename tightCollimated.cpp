@@ -199,9 +199,9 @@ void advanceInternalStateOneTimeStep(Ensemble& ensemble, const Param& param)
     s_total.setZero(3 * nAtom);;//a vector of spins for all the atoms 
     for (int i = 0; i < nAtom; i++) 
     {
-      s_total[3 * i] = ensemble.atoms[i].internal.sx(n);
-      s_total[3 * i + 1] = ensemble.atoms[i].internal.sy(n);
-      s_total[3 * i + 2] = ensemble.atoms[i].internal.sz(n);
+      s_total(3 * i) = ensemble.atoms[i].internal.sx(n);
+      s_total(3 * i + 1) = ensemble.atoms[i].internal.sy(n);
+      s_total(3 * i + 2) = ensemble.atoms[i].internal.sz(n);
     }
 
     //Stochastic integration
